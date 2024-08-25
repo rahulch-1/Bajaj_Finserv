@@ -1,119 +1,58 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# {"data":["a","b","1"]}
 @app.route('/')
 def index():
     return '''
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bajaj Finserv - Data Processor</title>
+    <title>21BCE9779</title>
     <style>
-        /* Existing CSS */
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-
+        /* Add your CSS styling here */
         body {
-            background-color: #f4f4f4;
-            font-family: "Montserrat", sans-serif;
-            color: #333333;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f7f7f7;
         }
-
         h1 {
-            font-size: 2.5rem;
-            color: #0a3d62;
-            text-align: center;
-            margin-bottom: 20px;
+            color: #333;
         }
-
-        form {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 2rem auto;
-        }
-
         textarea {
             width: 100%;
-            border-radius: 5px;
-            border: 1px solid #0a3d62;
             padding: 10px;
-            font-size: 1rem;
-            margin-bottom: 15px;
+            font-size: 14px;
         }
-
         button {
-            width: 100%;
-            border-radius: 5px;
-            padding: 10px;
-            border: none;
-            background-color: #0a3d62;
-            color: white;
-            font-size: 1.2rem;
+            margin-top: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
         }
-
-        button:hover {
-            background-color: #0c2c56;
-        }
-
-        #response {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 2rem auto;
-        }
-
-        h2 {
-            color: #0a3d62;
-        }
-
-        pre {
-            background-color: #f4f4f4;
-            color: #0a3d62;
+        select {
+            margin-top: 10px;
             padding: 10px;
+            font-size: 16px;
+        }
+        pre {
+            background-color: #efefef;
+            padding: 15px;
             border-radius: 5px;
             white-space: pre-wrap;
-            font-size: 1rem;
+            word-wrap: break-word;
         }
-
-        label {
-            display: block;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            color: #0a3d62;
-        }
-
-        input[type="checkbox"] {
-            margin-right: 10px;
-        }
-
         .hidden {
             display: none;
         }
-
-        #numbersSection,
-        #alphabetsSection,
-        #highestAlphabetSection,
-        #highestNumberSection {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #e3f2fd;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
     </style>
 </head>
-
 <body>
     <div>
         <h1>Bajaj Finserv Data Processor</h1>
@@ -121,24 +60,30 @@ def index():
             <textarea id="jsonInput" rows="6" cols="50" placeholder="Enter your JSON data here..."></textarea><br>
             <button type="button" onclick="submitJson()">Process Data</button>
         </form>
-        <div id="response">
+        <div id="dropdownSection" class="hidden">
+            <label for="responseFilter">Select data to display:</label>
+            <select id="responseFilter" multiple>
+                <option value="numbers">Numbers</option>
+                <option value="alphabets">Alphabets</option>
+                <option value="highest_lowercase_alphabet">Highest Lowercase Alphabet</option>
+            </select>
+            <button type="button" onclick="filterResponse()">Show Data</button>
+        </div>
+        <div id="response" class="hidden">
             <h2>Processing Results</h2>
             <pre id="responseData"></pre>
-            <div>
-                <label><input type="checkbox" id="showNumbers" onclick="toggleSection()"> Numbers</label>
-                <label><input type="checkbox" id="showAlphabets" onclick="toggleSection()"> Alphabets</label>
-                <label><input type="checkbox" id="showHighestAlphabet" onclick="toggleSection()"> Highest Alphabet</label>
-                <label><input type="checkbox" id="showHighestNumber" onclick="toggleSection()"> Highest Number</label>
-            </div>
-            <div id="numbersSection" class="hidden"></div>
-            <div id="alphabetsSection" class="hidden"></div>
-            <div id="highestAlphabetSection" class="hidden"></div>
-            <div id="highestNumberSection" class="hidden"></div>
         </div>
     </div>
     <script>
         function submitJson() {
             const jsonInput = document.getElementById('jsonInput').value;
+            try {
+                JSON.parse(jsonInput); // Validate JSON
+            } catch (e) {
+                alert('Invalid JSON format');
+                return;
+            }
+
             const url = '/bfhl';
 
             fetch(url, {
@@ -148,47 +93,55 @@ def index():
                 },
                 body: jsonInput
             })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('responseData').textContent = JSON.stringify(data, null, 2);
-                    document.getElementById('numbersSection').textContent = `Numbers: ${data.numbers.join(', ')}`;
-                    document.getElementById('alphabetsSection').textContent = `Alphabets: ${data.alphabets.join(', ')}`;
-                    document.getElementById('highestAlphabetSection').textContent = `Highest Alphabet: ${data.highest_alphabet.join(', ')}`;
-                    document.getElementById('highestNumberSection').textContent = `Highest Number: ${data.highest_number.join(', ')}`;
-                })
-                .catch(error => console.error('Error:', error));
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').classList.remove('hidden');
+                document.getElementById('dropdownSection').classList.remove('hidden');
+                document.getElementById('responseData').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
         }
 
-        function toggleSection() {
-            document.getElementById('numbersSection').classList.toggle('hidden', !document.getElementById('showNumbers').checked);
-            document.getElementById('alphabetsSection').classList.toggle('hidden', !document.getElementById('showAlphabets').checked);
-            document.getElementById('highestAlphabetSection').classList.toggle('hidden', !document.getElementById('showHighestAlphabet').checked);
-            document.getElementById('highestNumberSection').classList.toggle('hidden', !document.getElementById('showHighestNumber').checked);
+        function filterResponse() {
+            const data = JSON.parse(document.getElementById('responseData').textContent);
+            const filter = Array.from(document.getElementById('responseFilter').selectedOptions).map(option => option.value);
+
+            const filteredData = {};
+            filter.forEach(key => {
+                if (data[key]) {
+                    filteredData[key] = data[key];
+                }
+            });
+
+            // Update the display with the filtered data
+            document.getElementById('responseData').textContent = JSON.stringify(filteredData, null, 2);
         }
     </script>
 </body>
-
 </html>
-
 '''
 
 @app.route('/bfhl', methods=['POST'])
 def post_bfhl():
     data = request.json.get('data', [])
+    
     numbers = [int(x) for x in data if x.isdigit()]
     alphabets = [x for x in data if x.isalpha()]
-    highest_alphabet = [max(alphabets, key=str.lower)] if alphabets else []
-    highest_number = [str(max(numbers))] if numbers else []
+    
+    # Filter only lowercase alphabets
+    lowercase_alphabets = [char for char in alphabets if char.islower()]
+    
+    # Find the highest lowercase alphabet
+    highest_lowercase_alphabet = [max(lowercase_alphabets)] if lowercase_alphabets else []
 
     response = {
         "is_success": True,
-        "user_id": "rahulch",
+        "user_id": "Chereddy_Rahul",
         "email": "rahul.21bce9779@vitapstudent.ac.in",
         "roll_number": "21BCE9779",
         "numbers": numbers,
         "alphabets": alphabets,
-        "highest_alphabet": highest_alphabet,
-        "highest_number": highest_number
+        "highest_lowercase_alphabet": highest_lowercase_alphabet
     }
     return jsonify(response)
 
